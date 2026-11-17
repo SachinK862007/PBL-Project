@@ -1,4 +1,4 @@
-/* SecureBrowse — UI behaviour: nav, reveal, scanner, activity table. */
+/* SecureBrowse — UI behaviour: nav, reveal, feeds and scanner. */
 (function () {
   "use strict";
 
@@ -171,41 +171,6 @@
     footEl.textContent = foot;
   }
 
-  function renderHistory(payload) {
-    const body = document.getElementById("activity-body");
-    const empty = document.getElementById("activity-empty");
-    if (!body) return;
-
-    body.replaceChildren();
-    payload.history.forEach((row) => {
-      const tr = document.createElement("tr");
-
-      const domain = el("td", "activity__domain", row.domain);
-      domain.title = row.url;
-
-      const levelCell = document.createElement("td");
-      levelCell.appendChild(el("span", "badge badge--sm badge--" + row.level, row.level_label));
-      if (row.incomplete) levelCell.appendChild(el("span", "mini", "incomplete"));
-
-      tr.append(
-        domain,
-        levelCell,
-        el("td", "activity__score", String(row.score)),
-        el("td", "activity__when", row.when)
-      );
-      body.appendChild(tr);
-    });
-
-    empty.hidden = payload.history.length > 0;
-
-    const stats = payload.stats;
-    const map = { "stat-total": stats.total, "stat-high": stats.high, "stat-medium": stats.medium, "stat-low": stats.low };
-    Object.keys(map).forEach((id) => {
-      const node = document.getElementById(id);
-      if (node) node.textContent = String(map[id]);
-    });
-  }
-
   /* ---------- Threat feeds ---------- */
   const syncAll = document.getElementById("sync-feeds");
   const feedAlert = document.getElementById("feed-alert");
@@ -336,7 +301,6 @@
         }
 
         renderResult(payload.result);
-        renderHistory(payload);
         panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
       } catch (error) {
         setAlert("The analyser did not respond. Check that the Flask server is running and try again.");

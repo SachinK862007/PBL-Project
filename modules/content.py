@@ -64,7 +64,7 @@ PIPELINE = [
     {
         "step": 9,
         "title": "Save the activity",
-        "body": "The scan is recorded locally in SQLite so recent security activity can be reviewed on the dashboard.",
+        "body": "The scan is recorded locally in SQLite so the history survives a restart. Nothing is uploaded anywhere.",
     },
 ]
 
@@ -158,42 +158,6 @@ REFERENCES = [
     },
 ]
 
-REFERENCE_TREE = """SecureBrowse/
-└── references/
-    ├── ScamShield-Pro/
-    ├── url-reputation/
-    └── Phishing.Database/"""
-
-PROJECT_TREE = """SecureBrowse/
-├── app.py
-├── requirements.txt
-├── .env.example
-├── README.md
-│
-├── modules/
-│   ├── content.py            site copy and data
-│   ├── url_validator.py      input checks
-│   ├── url_analyzer.py       URL + domain signals
-│   ├── threat_sources.py     PhishTank · URLhaus · OpenPhish · Safe Browsing
-│   ├── result_handler.py     scoring and classification
-│   └── scan_history.py       SQLite activity log
-│
-├── templates/
-│   └── index.html
-│
-└── static/
-    ├── css/style.css
-    └── js/script.js"""
-
-FLOW = [
-    {"title": "Link or URL", "body": "Pasted by a user, or forwarded by a browser extension.", "tag": "input"},
-    {"title": "Validation", "body": "Empty, malformed and non-web schemes are rejected before analysis.", "tag": "app.py"},
-    {"title": "Reputation engine", "body": "Structure, domain and impersonation signals are extracted.", "tag": "url_analyzer"},
-    {"title": "Threat intelligence", "body": "Four sources are queried; unreachable sources are reported, never ignored.", "tag": "threat_sources"},
-    {"title": "Risk score", "body": "Weighted evidence becomes a score from 0 to 100 and one of three classes.", "tag": "result_handler"},
-    {"title": "Answer + history", "body": "The verdict, its reasons and the scan record appear on screen and in SQLite.", "tag": "SQLite"},
-]
-
 LIMITATIONS = [
     "New phishing and malware URLs may not yet appear in the sources being checked.",
     "Threat feeds and APIs have access limits, delays and outages.",
@@ -217,10 +181,3 @@ PURPOSE = {
         "The tool explains its reasons so its mistakes can be understood and corrected.",
     ],
 }
-
-BRIEF_NOTE = (
-    "The project brief describes a browser extension talking to a Python backend. "
-    "This repository delivers that idea as a Python web application: the same "
-    "pipeline (receive → validate → analyse → check → score → classify → explain) "
-    "with a working analyser instead of an extension."
-)

@@ -42,7 +42,6 @@ def home():
         content=content,
         sources=threat_sources.status_snapshot(),
         feeds_overview=threat_sources.feed_overview(),
-        **_history_payload(),
     )
 
 
@@ -65,7 +64,7 @@ def scan():
         level=result["level"],
         incomplete=result["incomplete"],
     )
-    return jsonify({"ok": True, "result": result, **_history_payload()})
+    return jsonify({"ok": True, "result": result})
 
 
 @app.get("/api/history")

@@ -27,13 +27,11 @@
       </a>
 
       <nav class="nav__links" id="nav-links" aria-label="Sections">
-        <a href="#problem">Why</a>
+        <a href="#top">Home</a>
         <a href="#pipeline">Pipeline</a>
         <a href="#scanner">Scanner</a>
         <a href="#levels">Verdicts</a>
         <a href="#intel">Intel</a>
-        <a href="#architecture">Architecture</a>
-        <a href="#activity">Activity</a>
       </nav>
 
       <div class="nav__actions">
@@ -370,51 +368,8 @@
       </div>
     </section>
 
-    <!-- ── Architecture ─────────────────────────────────────── -->
-    <section class="section section--alt" id="architecture">
-      <div class="container">
-        <header class="section__head reveal">
-          <p class="eyebrow">Architecture</p>
-          <h2>From a pasted address to an explained verdict</h2>
-          <p class="section__lead">{{ content.BRIEF_NOTE }}</p>
-        </header>
-
-        <ol class="pipe reveal">
-          {% for node in content.FLOW %}
-          <li class="pipe__node">
-            <span class="pipe__tag">{{ node.tag }}</span>
-            <h3>{{ node.title }}</h3>
-            <p>{{ node.body }}</p>
-          </li>
-          {% endfor %}
-        </ol>
-
-        <div class="grid grid--2 trees">
-          <article class="card code-card reveal">
-            <div class="code-card__head">
-              <h3>This repository</h3>
-              <span class="pill pill--ok">implemented</span>
-            </div>
-            <pre><code>{{ content.PROJECT_TREE }}</code></pre>
-          </article>
-
-          <article class="card code-card reveal" style="--delay: 80ms">
-            <div class="code-card__head">
-              <h3>Cloned references</h3>
-              <span class="pill pill--idle">read-only study</span>
-            </div>
-            <pre><code>{{ content.REFERENCE_TREE }}</code></pre>
-            <p class="code-card__note">
-              Kept outside the application code. Each repository’s licence is reviewed before any
-              logic or data is adapted.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <!-- ── References ───────────────────────────────────────── -->
-    <section class="section" id="references">
+    <section class="section section--alt" id="references">
       <div class="container">
         <header class="section__head reveal">
           <p class="eyebrow">Reference repositories</p>
@@ -434,49 +389,6 @@
             <span class="ref__link">Open on GitHub ↗</span>
           </a>
           {% endfor %}
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Activity ─────────────────────────────────────────── -->
-    <section class="section section--alt" id="activity">
-      <div class="container">
-        <header class="section__head section__head--row reveal">
-          <div>
-            <p class="eyebrow">Dashboard</p>
-            <h2>Recent security activity</h2>
-            <p class="section__lead">
-              Every scan is stored locally in SQLite so the history survives a restart. Nothing is
-              uploaded anywhere.
-            </p>
-          </div>
-          <ul class="counters">
-            <li><b id="stat-total">{{ stats.total }}</b><span>scans</span></li>
-            <li><b id="stat-high">{{ stats.high }}</b><span>high</span></li>
-            <li><b id="stat-medium">{{ stats.medium }}</b><span>medium</span></li>
-            <li><b id="stat-low">{{ stats.low }}</b><span>low</span></li>
-          </ul>
-        </header>
-
-        <div class="table-wrap reveal">
-          <table class="activity">
-            <thead>
-              <tr><th scope="col">Domain</th><th scope="col">Class</th><th scope="col">Score</th><th scope="col">When</th></tr>
-            </thead>
-            <tbody id="activity-body">
-              {% for row in history %}
-              <tr>
-                <td class="activity__domain" title="{{ row.url }}">{{ row.domain }}</td>
-                <td><span class="badge badge--sm badge--{{ row.level }}">{{ row.level_label }}</span>{% if row.incomplete %}<span class="mini">incomplete</span>{% endif %}</td>
-                <td class="activity__score">{{ row.score }}</td>
-                <td class="activity__when">{{ row.when }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          <p class="activity__empty" id="activity-empty" {% if history %}hidden{% endif %}>
-            No scans yet — analyse a URL above and it will appear here.
-          </p>
         </div>
       </div>
     </section>
