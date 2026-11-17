@@ -4,7 +4,7 @@
 
 The idea is simple: a user submits a URL, the application analyses its structure and, as integrations are added, checks it against external threat-intelligence sources. The result should explain whether a known threat was found or whether the scan could not reach a reliable conclusion.
 
-> **Project status:** This README describes the planned scope and design. It does not claim that the URL scanner, external API integrations, or risk assessment are already implemented. Update the status as each part is built and tested.
+> **Project status:** The Python/Flask web application is implemented in this repository: input validation, structural URL and domain analysis, weighted risk scoring, three-class verdicts, an optional threat-source layer and a local SQLite activity log. The threat sources stay disabled until their keys are set in `.env`, and a scan that could not reach a source is always reported as incomplete.
 
 ## What the project aims to do
 
@@ -57,15 +57,15 @@ The earlier project draft proposed the following stack. Treat it as the current 
 
 | Technology | Intended use | Status in this project |
 |---|---|---|
-| Python | Backend logic and URL analysis | Proposed |
-| Flask | Python web application framework | Proposed; confirm before implementation |
-| HTML and CSS | Page structure and styling | Proposed |
-| JavaScript | Frontend interactions | Proposed |
-| HTTP requests / REST APIs | Communicating with threat-intelligence services | Planned |
+| Python | Backend logic and URL analysis | Implemented |
+| Flask | Python web application framework | Implemented |
+| HTML and CSS | Page structure and styling | Implemented (rendered by Flask) |
+| JavaScript | Frontend interactions | Implemented (scanner request and dashboard) |
+| HTTP requests / REST APIs | Communicating with threat-intelligence services | Implemented for the optional sources |
 | Git and GitHub | Version control and project hosting | Development tools |
 | Visual Studio Code | Development environment | Development tool |
 
-SQLite is not listed as a current dependency because a database requirement has not been established. Add a database only if the project needs to store scan history or other persistent data.
+SQLite is used for one purpose only: keeping the recent-scan history shown on the dashboard (`data/securebrowse.db`, created at runtime and ignored by Git).
 
 ## Threat-intelligence resources
 

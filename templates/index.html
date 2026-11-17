@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SecureBrowse — check a link before you click it</title>
+  <meta name="description" content="SecureBrowse examines a website URL, checks threat-intelligence sources and classifies the address as likely legitimate, medium risk or high risk.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2338e1ff' d='M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z'/%3E%3C/svg%3E">
+</head>
+<body>
+  <a class="skip" href="#scanner">Skip to the URL scanner</a>
+
+  <header class="nav" id="nav">
+    <div class="container nav__inner">
+      <a class="brand" href="#top" aria-label="SecureBrowse home">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.6 4.8 5.4v5.9c0 4.6 3.1 8.3 7.2 10.1 4.1-1.8 7.2-5.5 7.2-10.1V5.4L12 2.6Z"/>
+            <path d="m8.9 11.7 2.2 2.2 4-4.4"/>
+          </svg>
+        </span>
+        <span class="brand__name">Secure<span>Browse</span></span>
+      </a>
+
+      <nav class="nav__links" id="nav-links" aria-label="Sections">
+        <a href="#problem">Why</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#scanner">Scanner</a>
+        <a href="#levels">Verdicts</a>
+        <a href="#intel">Intel</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#activity">Activity</a>
+      </nav>
+
+      <div class="nav__actions">
+        <a class="btn btn--ghost btn--sm" href="#references">References</a>
+        <a class="btn btn--primary btn--sm" href="#scanner">Scan a URL</a>
+        <button class="nav__toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ── Hero ─────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="hero__aura" aria-hidden="true"></div>
+      <div class="container hero__inner">
+        <div class="hero__copy reveal">
+          <p class="eyebrow"><span class="pulse"></span>{{ content.HERO.eyebrow }}</p>
+          <h1>{{ content.HERO.title_before }} <span class="grad">{{ content.HERO.title_accent }}</span></h1>
+          <p class="lead">{{ content.HERO.lead }}</p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="#scanner">
+              Analyse a link
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13m-5-6 6 6-6 6"/></svg>
+            </a>
+            <a class="btn btn--ghost" href="#pipeline">See the nine steps</a>
+          </div>
+          <p class="hero__note">
+            No link is ever opened. The address is inspected as text, scored, and explained.
+          </p>
+        </div>
+
+        <div class="hero__visual reveal" style="--delay: 120ms">
+          <div class="mock">
+            <div class="mock__top">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="mock__tab">securebrowse · live scan</span>
+            </div>
+            <div class="mock__body">
+              <p class="mock__label">URL received</p>
+              <p class="mock__url"><span class="tok">https://</span><span class="tok tok--bad">amaz0n</span><span class="tok tok--bad">-security-login</span><span class="tok">.example</span></p>
+
+              <ul class="mock__signals">
+                <li>Look-alike spelling</li>
+                <li>Credential bait</li>
+                <li>Unknown domain</li>
+              </ul>
+
+              <div class="mock__checks">
+                                  <div><span>Domain analysis</span><b class="ok">4 signals</b></div>
+                <div><span>Threat feeds</span><b class="warn">not checked</b></div>
+                <div><span>Classification</span><b class="bad">high risk</b></div>
+              </div>
+
+              <div class="mock__verdict">
+                <div>
+                  <p class="mock__label">Risk score</p>
+                  <strong class="mock__score">81<small>/100</small></strong>
+                </div>
+                <span class="badge badge--high">Do not continue</span>
+              </div>
+            </div>
+          </div>
+          <div class="mock__glow" aria-hidden="true"></div>
+          <p class="mock__caption">Example of a look-alike address that imitates a brand login page.</p>
+        </div>
+      </div>
+
+      <div class="container">
+        <ul class="statbar reveal">
+          <li><b>9</b><span>steps in the pipeline</span></li>
+          <li><b>4</b><span>threat-intelligence sources</span></li>
+          <li><b>3</b><span>reference repositories</span></li>
+          <li><b>100%</b><span>of verdicts explained</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── Why ──────────────────────────────────────────────── -->
+    <section class="section" id="problem">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">The problem</p>
+          <h2>A link that looks right is the easiest way in</h2>
+          <p class="section__lead">
+            Imagine receiving <code class="inline">https://amaz0n-security-login.example</code>. It reads like an
+            Amazon page, but it can be a fake built to steal a password. Normally the link would simply be
+            clicked. SecureBrowse turns that silent moment into a checked decision.
+          </p>
+        </header>
+
+        <div class="grid grid--2">
+          <article class="card card--annot reveal">
+            <h3 class="card__title">What the address is actually doing</h3>
+            <div class="annot">
+              <span class="annot__part" data-tip="A fake scheme or look-alike host is where trust is borrowed.">https://amaz0n-security-login.example</span>
+            </div>
+            <ul class="ticks">
+              <li><b>amaz0n</b> — a zero replaces the “o” to imitate a brand.</li>
+              <li><b>-security-login</b> — credential wording borrowed from real login pages.</li>
+              <li><b>.example</b> — not the brand’s real domain, so the trust is unearned.</li>
+            </ul>
+            <p class="card__foot">
+              Each of those traits alone is weak evidence. Together they form a pattern.
+            </p>
+          </article>
+
+          <article class="card reveal" style="--delay: 80ms">
+            <h3 class="card__title">What SecureBrowse answers</h3>
+            <ol class="answers">
+              <li><span>1</span> Is this address built like a legitimate one?</li>
+              <li><span>2</span> Has a threat source already reported it?</li>
+              <li><span>3</span> How strong is the combined evidence?</li>
+              <li><span>4</span> Which class does the score fall into?</li>
+            </ol>
+            <p class="card__foot">
+              Every verdict carries its reasons, and every incomplete check is named.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Pipeline ─────────────────────────────────────────── -->
+    <section class="section section--alt" id="pipeline">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">How it works</p>
+          <h2>The whole project in one pipeline</h2>
+          <p class="section__lead">
+            Nine steps take an address from a string in a text box to a classified, stored result.
+            Steps 3 and 8 depend on external sources and on the interface in front of the engine.
+          </p>
+        </header>
+
+        <ol class="flow-grid">
+          {% for step in content.PIPELINE %}
+          <li class="flow-card reveal" style="--delay: {{ loop.index0 * 40 }}ms">
+            <span class="flow-card__num">{{ "%02d"|format(step.step) }}</span>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.body }}</p>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </section>
+
+    <!-- ── Scanner ──────────────────────────────────────────── -->
+    <section class="section" id="scanner">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">Try it</p>
+          <h2>Analyse a URL</h2>
+          <p class="section__lead">
+            The analyser reads the address as text: structure, domain composition and impersonation
+            signals. Threat sources run only when their keys are configured in <code class="inline">.env</code>,
+            and anything not checked is reported as incomplete.
+          </p>
+        </header>
+
+        <div class="scanner reveal">
+          <form class="scan-form" id="scan-form" novalidate>
+            <div class="scan-field">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>
+              </svg>
+              <label class="sr-only" for="url-input">Website URL</label>
+              <input id="url-input" name="url" type="text" inputmode="url" autocomplete="off"
+                     spellcheck="false" placeholder="https://example.com/account/verify" required>
+            </div>
+            <button class="btn btn--primary" type="submit" id="scan-button">
+              <span class="btn__label">Analyse URL</span>
+              <span class="spinner" aria-hidden="true"></span>
+            </button>
+          </form>
+          <p class="scan-hint">
+            Try a look-alike example: <button type="button" class="linkish" data-fill="https://amaz0n-security-login.example">amaz0n-security-login.example</button>
+            · or a plain one: <button type="button" class="linkish" data-fill="https://www.wikipedia.org">wikipedia.org</button>
+          </p>
+          <p class="scan-alert" id="scan-alert" role="alert" hidden></p>
+
+          <!-- Result skeleton, filled by static/js/script.js -->
+          <section class="result" id="scan-result" hidden aria-live="polite">
+            <div class="result__top">
+              <div class="gauge" id="gauge">
+                <svg viewBox="0 0 200 112" role="img" aria-label="Risk score dial">
+                  <path class="gauge__track" d="M20 100 A 80 80 0 0 1 180 100"/>
+                  <path class="gauge__fill" id="gauge-fill" d="M20 100 A 80 80 0 0 1 180 100"
+                        stroke-dasharray="251.3" stroke-dashoffset="251.3"/>
+                </svg>
+                <div class="gauge__value">
+                  <strong id="result-score">0</strong>
+                  <span>/ 100 risk score</span>
+                </div>
+              </div>
+
+              <div class="result__headline">
+                <span class="badge" id="result-badge">—</span>
+                <h3 id="result-domain">—</h3>
+                <p class="result__url" id="result-url">—</p>
+                <p class="result__reason" id="result-reason"></p>
+              </div>
+            </div>
+
+            <div class="result__cols">
+              <div class="result__block">
+                <h4>Signals found <span class="count" id="finding-count">0</span></h4>
+                <ul class="findings" id="result-findings"></ul>
+              </div>
+              <div class="result__block">
+                <h4>Threat sources <span class="count" id="source-count">0/0</span></h4>
+                <ul class="sources" id="result-sources"></ul>
+              </div>
+            </div>
+
+            <p class="result__foot" id="result-foot"></p>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Verdict classes ──────────────────────────────────── -->
+    <section class="section section--alt" id="levels">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">Classification</p>
+          <h2>Three outcomes, one score</h2>
+          <p class="section__lead">
+            The risk score is a summary of evidence out of 100. A confirmed listing in a threat source
+            is decisive; otherwise the weighted signals decide the class.
+          </p>
+        </header>
+
+        <div class="grid grid--3">
+          {% for level in content.LEVELS %}
+          <article class="level level--{{ level.key }} reveal" style="--delay: {{ loop.index0 * 70 }}ms">
+            <div class="level__head">
+              <span class="level__dot"></span>
+              <h3>{{ level.label }}</h3>
+            </div>
+            <p class="level__range">{{ level.range }}<span>score</span></p>
+            <p class="level__body">{{ level.body }}</p>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Intel ────────────────────────────────────────────── -->
+    <section class="section" id="intel">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">Threat intelligence</p>
+          <h2>Four sources, queried only when configured</h2>
+          <p class="section__lead">
+            These are the resources selected for the project. Keys live in <code class="inline">.env</code>,
+            never in the browser or in Git. If a source is unreachable, the scan is marked incomplete.
+          </p>
+        </header>
+
+        <div class="grid grid--2">
+          {% for source in content.SOURCES %}
+          {% set state = sources[loop.index0] %}
+          <article class="card source reveal" style="--delay: {{ loop.index0 * 60 }}ms">
+            <div class="source__head">
+              <h3>{{ source.name }}</h3>
+              <span class="pill {{ 'pill--ok' if state.configured else 'pill--idle' }}">{{ state.status }}</span>
+            </div>
+            <p>{{ source.purpose }}</p>
+            <p class="source__meta"><span>{{ source.provides }}</span></p>
+            <div class="source__foot">
+              <code>{{ state.env }}</code>
+              <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">Documentation ↗</a>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+
+        <p class="notice reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+          Before enabling an integration, check the provider’s current API or feed documentation, access
+          requirements, rate limits and usage terms. An API failure is never read as “safe”.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── Architecture ─────────────────────────────────────── -->
+    <section class="section section--alt" id="architecture">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">Architecture</p>
+          <h2>From a pasted address to an explained verdict</h2>
+          <p class="section__lead">{{ content.BRIEF_NOTE }}</p>
+        </header>
+
+        <ol class="pipe reveal">
+          {% for node in content.FLOW %}
+          <li class="pipe__node">
+            <span class="pipe__tag">{{ node.tag }}</span>
+            <h3>{{ node.title }}</h3>
+            <p>{{ node.body }}</p>
+          </li>
+          {% endfor %}
+        </ol>
+
+        <div class="grid grid--2 trees">
+          <article class="card code-card reveal">
+            <div class="code-card__head">
+              <h3>This repository</h3>
+              <span class="pill pill--ok">implemented</span>
+            </div>
+            <pre><code>{{ content.PROJECT_TREE }}</code></pre>
+          </article>
+
+          <article class="card code-card reveal" style="--delay: 80ms">
+            <div class="code-card__head">
+              <h3>Cloned references</h3>
+              <span class="pill pill--idle">read-only study</span>
+            </div>
+            <pre><code>{{ content.REFERENCE_TREE }}</code></pre>
+            <p class="code-card__note">
+              Kept outside the application code. Each repository’s licence is reviewed before any
+              logic or data is adapted.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── References ───────────────────────────────────────── -->
+    <section class="section" id="references">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">Reference repositories</p>
+          <h2>Learning from three projects, copying none blindly</h2>
+          <p class="section__lead">
+            These repositories are studied for ideas and data. SecureBrowse is a separate project and
+            does not automatically include their code.
+          </p>
+        </header>
+
+        <div class="grid grid--3">
+          {% for repo in content.REFERENCES %}
+          <a class="card ref reveal" href="{{ repo.url }}" target="_blank" rel="noopener noreferrer" style="--delay: {{ loop.index0 * 70 }}ms">
+            <span class="ref__role">{{ repo.role }}</span>
+            <h3>{{ repo.name }}</h3>
+            <p>{{ repo.body }}</p>
+            <span class="ref__link">Open on GitHub ↗</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Activity ─────────────────────────────────────────── -->
+    <section class="section section--alt" id="activity">
+      <div class="container">
+        <header class="section__head section__head--row reveal">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h2>Recent security activity</h2>
+            <p class="section__lead">
+              Every scan is stored locally in SQLite so the history survives a restart. Nothing is
+              uploaded anywhere.
+            </p>
+          </div>
+          <ul class="counters">
+            <li><b id="stat-total">{{ stats.total }}</b><span>scans</span></li>
+            <li><b id="stat-high">{{ stats.high }}</b><span>high</span></li>
+            <li><b id="stat-medium">{{ stats.medium }}</b><span>medium</span></li>
+            <li><b id="stat-low">{{ stats.low }}</b><span>low</span></li>
+          </ul>
+        </header>
+
+        <div class="table-wrap reveal">
+          <table class="activity">
+            <thead>
+              <tr><th scope="col">Domain</th><th scope="col">Class</th><th scope="col">Score</th><th scope="col">When</th></tr>
+            </thead>
+            <tbody id="activity-body">
+              {% for row in history %}
+              <tr>
+                <td class="activity__domain" title="{{ row.url }}">{{ row.domain }}</td>
+                <td><span class="badge badge--sm badge--{{ row.level }}">{{ row.level_label }}</span>{% if row.incomplete %}<span class="mini">incomplete</span>{% endif %}</td>
+                <td class="activity__score">{{ row.score }}</td>
+                <td class="activity__when">{{ row.when }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <p class="activity__empty" id="activity-empty" {% if history %}hidden{% endif %}>
+            No scans yet — analyse a URL above and it will appear here.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Purpose ──────────────────────────────────────────── -->
+    <section class="section" id="purpose">
+      <div class="container">
+        <div class="grid grid--2 purpose">
+          <div class="reveal">
+            <p class="eyebrow">Good use</p>
+            <h2>{{ content.PURPOSE.title }}</h2>
+            <p class="section__lead">{{ content.PURPOSE.body }}</p>
+            <ul class="ticks ticks--plain">
+              {% for point in content.PURPOSE.points %}
+              <li>{{ point }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          <div class="card card--limits reveal" style="--delay: 80ms">
+            <h3 class="card__title">Known limitations</h3>
+            <ul class="limits">
+              {% for item in content.LIMITATIONS %}
+              <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <div class="cta reveal">
+          <div>
+            <h3>Check the link before the link checks you</h3>
+            <p>Paste any address into the analyser and read the reasons behind the verdict.</p>
+          </div>
+          <a class="btn btn--primary" href="#scanner">Open the scanner</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.6 4.8 5.4v5.9c0 4.6 3.1 8.3 7.2 10.1 4.1-1.8 7.2-5.5 7.2-10.1V5.4L12 2.6Z"/>
+            <path d="m8.9 11.7 2.2 2.2 4-4.4"/>
+          </svg>
+        </span>
+        <div>
+          <p class="footer__name">SecureBrowse</p>
+          <p class="footer__tag">URL reputation and phishing awareness · PBL project</p>
+        </div>
+      </div>
+      <p class="footer__note">
+        A result with no known threat found is not a guarantee that a website is safe.
+        Built with Python and Flask.
+      </p>
+      <a class="footer__link" href="https://github.com/psairohith14-coder/PBL-Project/tree/sair" target="_blank" rel="noopener noreferrer">GitHub · sair ↗</a>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+</body>
+</html>
