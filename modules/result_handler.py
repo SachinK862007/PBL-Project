@@ -30,7 +30,10 @@ def build_result(analysis: dict, source_checks: list[dict]) -> dict:
     score = analysis["score"]
     matched = [check for check in source_checks if check["status"] == "match"]
     checked = [check for check in source_checks if check["status"] in ("match", "clear")]
-    unavailable = [check for check in source_checks if check["status"] in ("not_configured", "error")]
+    unavailable = [
+        check for check in source_checks
+        if check["status"] in ("not_configured", "not_synced", "error")
+    ]
 
     if matched:
         score = 100

@@ -12,7 +12,14 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
-from modules import content, scan_history, threat_sources, url_analyzer, url_validator
+from modules import (
+    content,
+    feeds,
+    scan_history,
+    threat_sources,
+    url_analyzer,
+    url_validator,
+)
 from modules.result_handler import build_result
 
 load_dotenv()
@@ -20,6 +27,8 @@ load_dotenv()
 app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False
 scan_history.init_db()
+feeds.init_db()
+feeds.sync_keyless_in_background()
 
 
 def _history_payload() -> dict:
@@ -32,6 +41,7 @@ def home():
         "index.html",
         content=content,
         sources=threat_sources.status_snapshot(),
+        feeds_overview=threat_sources.feed_overview(),
         **_history_payload(),
     )
 
@@ -44,7 +54,10 @@ def scan():
         return jsonify({"ok": False, "error": error}), 400
 
     analysis = url_analyzer.analyze(url)
-    result = build_result(analysis, threat_sources.check_all(url))
+    result = build_result(
+        analysis,
+        threat_sources.check_all(url, analysis["host"], analysis["domain"]),
+    )
     scan_history.record(
         url=result["url"],
         domain=result["domain"],
@@ -58,6 +71,34 @@ def scan():
 @app.get("/api/history")
 def history():
     return jsonify(_history_payload())
+
+
+@app.get("/api/feeds")
+def feed_status():
+    return jsonify({
+        "ok": True,
+        **threat_sources.feed_overview(),
+        "sources": threat_sources.status_snapshot(),
+    })
+
+
+@app.post("/api/feeds/sync")
+def feed_sync():
+    payload = request.get_json(silent=True) or {}
+    target = (payload.get("id") or "").strip()
+    try:
+        if target:
+            feeds.sync(target)
+        else:
+            feeds.sync_all()
+    except KeyError:
+        return jsonify({"ok": False, "error": "Unknown feed."}), 400
+
+    return jsonify({
+        "ok": True,
+        **threat_sources.feed_overview(),
+        "sources": threat_sources.status_snapshot(),
+    })
 
 
 @app.get("/healthz")

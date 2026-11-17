@@ -98,6 +98,7 @@
     clear: "clear",
     error: "error",
     not_configured: "not checked",
+    not_synced: "not synced",
   };
 
   function el(tag, className, text) {
@@ -204,6 +205,105 @@
       if (node) node.textContent = String(map[id]);
     });
   }
+
+  /* ---------- Threat feeds ---------- */
+  const syncAll = document.getElementById("sync-feeds");
+  const feedAlert = document.getElementById("feed-alert");
+
+  function applySources(sources) {
+    sources.forEach((source, index) => {
+      const card = document.querySelector('[data-source="' + index + '"]');
+      if (!card) return;
+      const pill = card.querySelector('[data-role="pill"]');
+      if (pill) {
+        pill.textContent = source.label;
+        pill.className = "pill pill--" + source.status;
+      }
+      const meta = card.querySelector('[data-role="meta"]');
+      if (meta) {
+        meta.textContent =
+          source.entries === null || source.entries === undefined
+            ? source.message
+            : source.entries_label + " entries" + (source.message ? " · " + source.message : "");
+      }
+    });
+  }
+
+  function applyFeedPayload(payload) {
+    const live = document.getElementById("feed-live");
+    if (live) live.textContent = String(payload.live);
+    const entries = document.getElementById("feed-entries");
+    if (entries) entries.textContent = Number(payload.entries).toLocaleString();
+    if (payload.sources) applySources(payload.sources);
+  }
+
+  function setFeedAlert(message) {
+    if (!feedAlert) return;
+    feedAlert.textContent = message;
+    feedAlert.hidden = !message;
+  }
+
+  async function runSync(feedId, trigger) {
+    if (trigger) {
+      trigger.disabled = true;
+      trigger.textContent = "Syncing…";
+    }
+    try {
+      const response = await fetch("/api/feeds/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(feedId ? { id: feedId } : {}),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) throw new Error(payload.error || "Sync failed");
+      applyFeedPayload(payload);
+      setFeedAlert("");
+      return payload;
+    } catch (error) {
+      setFeedAlert("Feed sync failed: " + error.message);
+      return null;
+    } finally {
+      if (trigger) {
+        trigger.disabled = false;
+        trigger.textContent = feedId ? "Sync now" : "Sync feeds";
+        trigger.classList.remove("is-loading");
+      }
+    }
+  }
+
+  if (syncAll) {
+    syncAll.addEventListener("click", async () => {
+      syncAll.disabled = true;
+      syncAll.classList.add("is-loading");
+      syncAll.querySelector(".btn__label").textContent = "Syncing feeds";
+      await runSync(null, null);
+      syncAll.disabled = false;
+      syncAll.classList.remove("is-loading");
+      syncAll.querySelector(".btn__label").textContent = "Sync feeds";
+    });
+  }
+
+  document.querySelectorAll("[data-sync]").forEach((button) => {
+    button.addEventListener("click", () => runSync(button.dataset.sync, button));
+  });
+
+  // A background warm-up starts on first run; follow it until the cards settle.
+  (function followWarmUp() {
+    const pending = () => document.querySelectorAll('[data-role="pill"].pill--not_synced').length;
+    if (!pending()) return;
+    let tries = 0;
+    const timer = window.setInterval(async () => {
+      tries += 1;
+      try {
+        const response = await fetch("/api/feeds");
+        const payload = await response.json();
+        applyFeedPayload(payload);
+      } catch (error) {
+        /* keep polling quietly */
+      }
+      if (!pending() || tries >= 15) window.clearInterval(timer);
+    }, 4000);
+  })();
 
   if (form) {
     form.addEventListener("submit", async (event) => {

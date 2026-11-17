@@ -105,15 +105,20 @@ def _brand_signal(main_label: str, domain: str, tld: str) -> dict | None:
             "high",
         )
 
-    if len(main_label) >= 5:
+    candidates = [token for token in tokens if len(token) >= 5]
+    collapsed = main_label.replace("-", "")
+    if len(collapsed) >= 5 and collapsed not in candidates:
+        candidates.append(collapsed)
+
+    for candidate in candidates:
         for brand in BRANDS:
-            if abs(len(brand) - len(main_label)) > 2:
+            if abs(len(brand) - len(candidate)) > 1:
                 continue
-            ratio = difflib.SequenceMatcher(None, main_label, brand).ratio()
-            if 0.86 <= ratio < 1.0:
+            ratio = difflib.SequenceMatcher(None, candidate, brand).ratio()
+            if 0.82 <= ratio < 1.0:
                 return _finding(
                     "Misspelled brand domain",
-                    f"'{main_label}' is one small typo away from '{brand}'.",
+                    f"'{candidate}' is one small typo away from '{brand}'.",
                     24,
                     "high",
                 )
