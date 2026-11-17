@@ -80,6 +80,26 @@ These are the four resources selected for investigation. They are **planned sour
 
 Before implementing an integration, check the provider's current API/feed documentation, access requirements, rate limits, attribution requirements, and usage terms. Do not put API keys directly in source code or commit them to GitHub.
 
+### Live sources and keys
+
+Three sources need no account at all. They are downloaded, cached in SQLite and checked on every scan, so the scanner has real threat data on first run:
+
+| Source | Access | How it is used |
+|---|---|---|
+| OpenPhish | Public feed | `https://openphish.com/feed.txt`, cached and matched per scan. |
+| Phishing.Database | Public repository list | Active phishing domains from the reference repository, cached the same way. |
+| PhishTank | Public verified list | `https://data.phishtank.com/data/online-valid.csv`; an app key raises the download limit. |
+
+Two sources need a key that belongs to your own account. Copy `.env.example` to `.env`, fill in what you have, restart the app and press **Sync feeds**:
+
+| Variable | Where to get it |
+|---|---|
+| `URLHAUS_AUTH_KEY` | <https://auth.abuse.ch/> (free Auth-Key, GitHub or Google sign-in) |
+| `GOOGLE_SAFE_BROWSING_KEY` | Google Cloud → enable the Safe Browsing API → create an API key |
+| `PHISHTANK_APP_KEY` | Optional: <https://phishtank.org/api_register.php> |
+
+Run `python verify_keys.py` to see the state of all five sources in one place. A source without a key stays **Needs key**, and any scan that could not reach it is marked incomplete — never reported as safe.
+
 ## GitHub reference repositories
 
 These repositories are references for learning and design. SecureBrowse is a separate project and does not automatically include their code or features.

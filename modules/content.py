@@ -64,7 +64,7 @@ PIPELINE = [
     {
         "step": 9,
         "title": "Save the activity",
-        "body": "The scan is recorded locally in SQLite so recent security activity can be reviewed on the dashboard.",
+        "body": "The scan is recorded locally in SQLite so the history survives a restart. Nothing is uploaded anywhere.",
     },
 ]
 
@@ -95,28 +95,45 @@ SOURCES = [
         "url": "https://phishtank.org/",
         "purpose": "Identifies reported phishing websites so a URL can be checked against a community-maintained list of reported phishing pages.",
         "provides": "Community-reported and verified phishing URLs",
-        "env": "PHISHTANK_FEED",
+        "key_env": "PHISHTANK_APP_KEY",
+        "signup_url": "https://phishtank.org/api_register.php",
+        "key_note": "Public feed — works without a key. A free app key only raises the hourly download limit.",
     },
     {
         "name": "URLhaus",
         "url": "https://urlhaus.abuse.ch/",
         "purpose": "Identifies URLs associated with malware distribution, helping SecureBrowse flag links known to deliver malicious files.",
         "provides": "Malware-distribution URL intelligence",
-        "env": "URLHAUS_AUTH_KEY",
+        "key_env": "URLHAUS_AUTH_KEY",
+        "signup_url": "https://auth.abuse.ch/",
+        "key_note": "Free Auth-Key after signing in at auth.abuse.ch with GitHub or Google.",
     },
     {
         "name": "OpenPhish",
         "url": "https://openphish.com/",
         "purpose": "Provides phishing URL intelligence so a website can be compared against an actively maintained phishing feed.",
         "provides": "Phishing URL feeds",
-        "env": "OPENPHISH_FEED",
+        "key_env": None,
+        "signup_url": "https://openphish.com/",
+        "key_note": "Public feed — no key needed. Synced automatically on first run.",
     },
     {
         "name": "Google Safe Browsing",
         "url": "https://developers.google.com/safe-browsing",
         "purpose": "Checks URLs against Google's information about unsafe web resources — phishing, malware and unwanted software.",
         "provides": "Unsafe web-resource lookups",
-        "env": "GOOGLE_SAFE_BROWSING_KEY",
+        "key_env": "GOOGLE_SAFE_BROWSING_KEY",
+        "signup_url": "https://console.cloud.google.com/apis/library/safebrowsing.googleapis.com",
+        "key_note": "Enable the Safe Browsing API in a Google Cloud project, then create an API key (free tier).",
+    },
+    {
+        "name": "Phishing.Database",
+        "url": "https://github.com/Phishing-Database/Phishing.Database",
+        "purpose": "A community-maintained collection of known phishing domains and URLs, used to recognise addresses that have already been reported.",
+        "provides": "Active phishing domains from the reference repository",
+        "key_env": None,
+        "signup_url": "https://github.com/Phishing-Database/Phishing.Database",
+        "key_note": "Public list — no key needed. Synced automatically on first run.",
     },
 ]
 
@@ -139,42 +156,6 @@ REFERENCES = [
         "role": "Threat-data reference",
         "body": "A community-maintained collection of known phishing domains and URLs, used to recognise addresses that have already been reported.",
     },
-]
-
-REFERENCE_TREE = """SecureBrowse/
-└── references/
-    ├── ScamShield-Pro/
-    ├── url-reputation/
-    └── Phishing.Database/"""
-
-PROJECT_TREE = """SecureBrowse/
-├── app.py
-├── requirements.txt
-├── .env.example
-├── README.md
-│
-├── modules/
-│   ├── content.py            site copy and data
-│   ├── url_validator.py      input checks
-│   ├── url_analyzer.py       URL + domain signals
-│   ├── threat_sources.py     PhishTank · URLhaus · OpenPhish · Safe Browsing
-│   ├── result_handler.py     scoring and classification
-│   └── scan_history.py       SQLite activity log
-│
-├── templates/
-│   └── index.html
-│
-└── static/
-    ├── css/style.css
-    └── js/script.js"""
-
-FLOW = [
-    {"title": "Link or URL", "body": "Pasted by a user, or forwarded by a browser extension.", "tag": "input"},
-    {"title": "Validation", "body": "Empty, malformed and non-web schemes are rejected before analysis.", "tag": "app.py"},
-    {"title": "Reputation engine", "body": "Structure, domain and impersonation signals are extracted.", "tag": "url_analyzer"},
-    {"title": "Threat intelligence", "body": "Four sources are queried; unreachable sources are reported, never ignored.", "tag": "threat_sources"},
-    {"title": "Risk score", "body": "Weighted evidence becomes a score from 0 to 100 and one of three classes.", "tag": "result_handler"},
-    {"title": "Answer + history", "body": "The verdict, its reasons and the scan record appear on screen and in SQLite.", "tag": "SQLite"},
 ]
 
 LIMITATIONS = [
@@ -200,10 +181,3 @@ PURPOSE = {
         "The tool explains its reasons so its mistakes can be understood and corrected.",
     ],
 }
-
-BRIEF_NOTE = (
-    "The project brief describes a browser extension talking to a Python backend. "
-    "This repository delivers that idea as a Python web application: the same "
-    "pipeline (receive → validate → analyse → check → score → classify → explain) "
-    "with a working analyser instead of an extension."
-)

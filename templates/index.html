@@ -27,13 +27,11 @@
       </a>
 
       <nav class="nav__links" id="nav-links" aria-label="Sections">
-        <a href="#problem">Why</a>
+        <a href="#top">Home</a>
         <a href="#pipeline">Pipeline</a>
         <a href="#scanner">Scanner</a>
         <a href="#levels">Verdicts</a>
         <a href="#intel">Intel</a>
-        <a href="#architecture">Architecture</a>
-        <a href="#activity">Activity</a>
       </nav>
 
       <div class="nav__actions">
@@ -85,7 +83,7 @@
 
               <div class="mock__checks">
                                   <div><span>Domain analysis</span><b class="ok">4 signals</b></div>
-                <div><span>Threat feeds</span><b class="warn">not checked</b></div>
+                                  <div><span>Threat feeds</span><b class="ok">3 sources live</b></div>
                 <div><span>Classification</span><b class="bad">high risk</b></div>
               </div>
 
@@ -295,22 +293,71 @@
           </p>
         </header>
 
+        <div class="feedbar reveal">
+          <div>
+            <p class="feedbar__line">
+              <b id="feed-live">{{ feeds_overview.live }}</b> of {{ feeds_overview.total }} feeds cached
+              <span class="feedbar__sep">·</span>
+              <span id="feed-entries">{{ "{:,}".format(feeds_overview.entries) }}</span> indicators stored
+            </p>
+            <p class="feedbar__note">
+              OpenPhish, Phishing.Database and PhishTank need no account and sync themselves on first run.
+              URLhaus and Google Safe Browsing need your own keys.
+            </p>
+          </div>
+          <button class="btn btn--primary btn--sm" id="sync-feeds" type="button">
+            <span class="btn__label">Sync feeds</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+        <p class="scan-alert" id="feed-alert" role="alert" hidden></p>
+
         <div class="grid grid--2">
           {% for source in content.SOURCES %}
           {% set state = sources[loop.index0] %}
-          <article class="card source reveal" style="--delay: {{ loop.index0 * 60 }}ms">
+          <article class="card source reveal" data-source="{{ loop.index0 }}" style="--delay: {{ loop.index0 * 60 }}ms">
             <div class="source__head">
-              <h3>{{ source.name }}</h3>
-              <span class="pill {{ 'pill--ok' if state.configured else 'pill--idle' }}">{{ state.status }}</span>
+              <h3>{{ source.name }} <span class="source__kind">{{ state.kind }}</span></h3>
+              <span class="pill pill--{{ state.status }}" data-role="pill">{{ state.label }}</span>
             </div>
             <p>{{ source.purpose }}</p>
-            <p class="source__meta"><span>{{ source.provides }}</span></p>
+            <p class="source__meta" data-role="meta">{% if state.entries is not none %}{{ state.entries_label }} entries{% if state.message %} · {{ state.message }}{% endif %}{% else %}{{ state.message }}{% endif %}</p>
+            <p class="source__key">{{ source.key_note }}</p>
             <div class="source__foot">
-              <code>{{ state.env }}</code>
-              <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">Documentation ↗</a>
+              {% if state.key_env %}<code>{{ state.key_env }}</code>{% else %}<code>no key required</code>{% endif %}
+              {% if state.syncable %}
+              <button type="button" class="source__action" data-sync="{{ state.id }}">Sync now</button>
+              {% elif not state.key_ready %}
+              <a class="source__action" href="{{ source.signup_url }}" target="_blank" rel="noopener noreferrer">Get key ↗</a>
+              {% else %}
+              <span class="source__ok">● ready</span>
+              {% endif %}
             </div>
           </article>
           {% endfor %}
+        </div>
+
+        {% if feeds_overview.samples %}
+        <div class="samples reveal">
+          <p class="samples__title">Prove it works: these come straight from the cached OpenPhish feed. Clicking one only fills the scanner — nothing is opened.</p>
+          <div class="samples__list">
+            {% for sample in feeds_overview.samples %}
+            <button type="button" class="chip-mono" data-fill="https://{{ sample }}">{{ sample }}</button>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="keyguide reveal">
+          <div>
+            <h3>Adding the two account keys</h3>
+            <p>Each key is free but tied to your own account, so it cannot be generated for you. Copy <code>.env.example</code> to <code>.env</code>, paste the value after the variable name, then restart <code>python app.py</code> and press <strong>Sync feeds</strong>.</p>
+          </div>
+          <ul>
+            <li><code>URLHAUS_AUTH_KEY</code> — auth.abuse.ch (GitHub or Google sign-in)</li>
+            <li><code>GOOGLE_SAFE_BROWSING_KEY</code> — Google Cloud → Safe Browsing API</li>
+            <li><code>PHISHTANK_APP_KEY</code> — optional; raises the PhishTank download limit</li>
+          </ul>
         </div>
 
         <p class="notice reveal">
@@ -321,51 +368,8 @@
       </div>
     </section>
 
-    <!-- ── Architecture ─────────────────────────────────────── -->
-    <section class="section section--alt" id="architecture">
-      <div class="container">
-        <header class="section__head reveal">
-          <p class="eyebrow">Architecture</p>
-          <h2>From a pasted address to an explained verdict</h2>
-          <p class="section__lead">{{ content.BRIEF_NOTE }}</p>
-        </header>
-
-        <ol class="pipe reveal">
-          {% for node in content.FLOW %}
-          <li class="pipe__node">
-            <span class="pipe__tag">{{ node.tag }}</span>
-            <h3>{{ node.title }}</h3>
-            <p>{{ node.body }}</p>
-          </li>
-          {% endfor %}
-        </ol>
-
-        <div class="grid grid--2 trees">
-          <article class="card code-card reveal">
-            <div class="code-card__head">
-              <h3>This repository</h3>
-              <span class="pill pill--ok">implemented</span>
-            </div>
-            <pre><code>{{ content.PROJECT_TREE }}</code></pre>
-          </article>
-
-          <article class="card code-card reveal" style="--delay: 80ms">
-            <div class="code-card__head">
-              <h3>Cloned references</h3>
-              <span class="pill pill--idle">read-only study</span>
-            </div>
-            <pre><code>{{ content.REFERENCE_TREE }}</code></pre>
-            <p class="code-card__note">
-              Kept outside the application code. Each repository’s licence is reviewed before any
-              logic or data is adapted.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <!-- ── References ───────────────────────────────────────── -->
-    <section class="section" id="references">
+    <section class="section section--alt" id="references">
       <div class="container">
         <header class="section__head reveal">
           <p class="eyebrow">Reference repositories</p>
@@ -385,49 +389,6 @@
             <span class="ref__link">Open on GitHub ↗</span>
           </a>
           {% endfor %}
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Activity ─────────────────────────────────────────── -->
-    <section class="section section--alt" id="activity">
-      <div class="container">
-        <header class="section__head section__head--row reveal">
-          <div>
-            <p class="eyebrow">Dashboard</p>
-            <h2>Recent security activity</h2>
-            <p class="section__lead">
-              Every scan is stored locally in SQLite so the history survives a restart. Nothing is
-              uploaded anywhere.
-            </p>
-          </div>
-          <ul class="counters">
-            <li><b id="stat-total">{{ stats.total }}</b><span>scans</span></li>
-            <li><b id="stat-high">{{ stats.high }}</b><span>high</span></li>
-            <li><b id="stat-medium">{{ stats.medium }}</b><span>medium</span></li>
-            <li><b id="stat-low">{{ stats.low }}</b><span>low</span></li>
-          </ul>
-        </header>
-
-        <div class="table-wrap reveal">
-          <table class="activity">
-            <thead>
-              <tr><th scope="col">Domain</th><th scope="col">Class</th><th scope="col">Score</th><th scope="col">When</th></tr>
-            </thead>
-            <tbody id="activity-body">
-              {% for row in history %}
-              <tr>
-                <td class="activity__domain" title="{{ row.url }}">{{ row.domain }}</td>
-                <td><span class="badge badge--sm badge--{{ row.level }}">{{ row.level_label }}</span>{% if row.incomplete %}<span class="mini">incomplete</span>{% endif %}</td>
-                <td class="activity__score">{{ row.score }}</td>
-                <td class="activity__when">{{ row.when }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          <p class="activity__empty" id="activity-empty" {% if history %}hidden{% endif %}>
-            No scans yet — analyse a URL above and it will appear here.
-          </p>
         </div>
       </div>
     </section>
